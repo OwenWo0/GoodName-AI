@@ -1,0 +1,52 @@
+{
+  "name": "naming2",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "dev": "next dev --turbopack",
+    "build": "next build --turbopack",
+    "build:prod": "next build",
+    "build:cf": "bun run build:prod && opennextjs-cloudflare build --skipNextBuild",
+    "preview": "bun run build:cf && opennextjs-cloudflare preview",
+    "deploy": "bun run build:cf && opennextjs-cloudflare deploy",
+    "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
+    "gen:kangxi-data": "bun scripts/extract-kangxi-data.ts",
+    "start": "next start",
+    "lint": "eslint",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
+  },
+  "dependencies": {
+    "lunar-typescript": "^1.8.6",
+    "next": "15.5.24",
+    "openai": "^7.8.0",
+    "opencc-js": "^1.4.2",
+    "pinyin-pro": "^3.29.3",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "shunshi-kangxi-core": "^0.1.1",
+    "streamdown": "^2.6.0",
+    "zod": "^4.5.2"
+  },
+  "overrides": {
+    "postcss": "^8.5.26"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3",
+    "@opennextjs/cloudflare": "^1.20.4",
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@vitest/coverage-v8": "^4.1.11",
+    "eslint": "^9",
+    "eslint-config-next": "15.5.24",
+    "tailwindcss": "^4",
+    "tyme4ts": "^1.5.2",
+    "typescript": "^5",
+    "vitest": "^4.1.11",
+    "wrangler": "^4.127.1"
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "naming",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2025-06-01",
+  "compatibility_flags": [
+    // Node.js API 支持（openai SDK / zod 等依赖需要）
+    "nodejs_compat",
+    // 允许 fetch 公网 HTTPS 端点（LLM 代理调用）
+    // https://developers.cloudflare.com/workers/configuration/compatibility-flags/#global-fetch-strictly-public
+    "global_fetch_strictly_public"
+  ],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "services": [
+    // ISR/on-demand revalidation 自引用；OpenNext 官方模板推荐，当前无 ISR 亦无害
+    { "binding": "WORKER_SELF_REFERENCE", "service": "naming" }
+  ],
+  // 只放非敏感变量。铁律：LLM_API_KEY 一律不进本文件——
+  // 远端用 `wrangler secret put LLM_API_KEY`，本地读 .env（wrangler dev 与 next dev 共用）。
+  // 限流阈值（RATE_LIMIT_*）刻意不在此处——以 src/middleware.ts 代码默认值（分析 6/分、通用 30/分）为单一真相源；
+  // analyze 端点的精确限流由 Cloudflare 边缘 Rate Limiting rule 按真实 IP 执行（A 案）。
+  "vars": {
+    "LLM_API_BASE_URL": "https://pipe.intelli-go.cn/v1",
+    "LLM_MODEL": "qwen3.8-27b"
+  },
+  // CPU 上限（Standard usage model 专属键，bundled 旧模型遗留的 50ms 硬顶由
+  // Dashboard Settings→Usage Model 切 Standard 解除，本键只在新模型下生效）。
+  // 上限 300000（5min）；取 120000=2min，对排盘/评估类同步计算留足余量。
+  "limits": {
+    "cpu_ms": 120000
+  },
+  // Workers 可观测性（控制台 Settings→Observability 的「日志/跟踪」两开关）：
+  // enabled=总开关；head_sampling_rate=1 全采样（个人站低流量，默认 10% 采样会丢线索）。
+  // logs=Workers 日志（console/异常持久化可查，persist 默认 true）；
+  // traces=Workers 跟踪（调用链 span，persist 默认 true）。
+  // https://developers.cloudflare.com/workers/wrangler/configuration/#observability
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1,
+    "logs": { "enabled": true },
+    "traces": { "enabled": true }
+  }
+}

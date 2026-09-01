@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 520" width="520" height="520" font-family="'Songti SC','SimSun',serif">
+  <!-- 问名手卷 · 八卦盘（SMIL 原生动画，README img 引用即可播放） -->
+  <defs>
+    <g id="bar"><rect x="-17" y="-2.5" width="34" height="5" rx="1"/></g>
+    <g id="breakbar"><rect x="-17" y="-2.5" width="13" height="5" rx="1"/><rect x="4" y="-2.5" width="13" height="5" rx="1"/></g>
+  </defs>
+
+  <g stroke-linecap="round">
+    <!-- 外环：缓旋 44s -->
+    <g stroke="#d9ccb2" fill="none">
+      <circle cx="260" cy="260" r="230" stroke-width="1" stroke-dasharray="1 7"/>
+      <animateTransform attributeName="transform" type="rotate" from="0 260 260" to="360 260 260" dur="44s" repeatCount="indefinite"/>
+    </g>
+    <!-- 中环：逆行 68s -->
+    <g stroke="#cbbb9c" fill="none">
+      <circle cx="260" cy="260" r="200" stroke-width="1.5" stroke-dasharray="140 20 40 30"/>
+      <animateTransform attributeName="transform" type="rotate" from="360 260 260" to="0 260 260" dur="68s" repeatCount="indefinite"/>
+    </g>
+    <!-- 能量弧：金弧疾转 9s -->
+    <g fill="none">
+      <path d="M260 110 A150 150 0 0 1 410 260" stroke="#b8934d" stroke-width="3">
+        <animate attributeName="opacity" values=".55;.95;.55" dur="9s" repeatCount="indefinite"/>
+      </path>
+      <animateTransform attributeName="transform" type="rotate" from="0 260 260" to="360 260 260" dur="9s" repeatCount="indefinite"/>
+    </g>
+    <!-- 静水弧：青弧缓行 60s -->
+    <g fill="none">
+      <path d="M260 410 A150 150 0 0 1 110 260" stroke="#5b7288" stroke-width="2.5">
+        <animate attributeName="opacity" values=".4;.7;.4" dur="6s" repeatCount="indefinite"/>
+      </path>
+      <animateTransform attributeName="transform" type="rotate" from="0 260 260" to="-360 260 260" dur="60s" repeatCount="indefinite"/>
+    </g>
+
+    <!-- 八卦：先天方位，错相呼吸 -->
+    <g fill="#8a7a55" stroke="none">
+      <g transform="rotate(0 260 260) translate(260 88)"><g><use href="#bar" y="-12"/><use href="#bar"/><use href="#bar" y="12"/><text y="30" font-size="11" text-anchor="middle" fill="#a08f66">乾</text><animate attributeName="opacity" values=".55;1;.55" dur="8s" begin="0s" repeatCount="indefinite"/></g></g>
+      <g transform="rotate(45 260 260) translate(260 88)"><g transform="rotate(-45)"><use href="#breakbar" y="-12"/><use href="#bar"/><use href="#bar" y="12"/><text y="30" font-size="11" text-anchor="middle" fill="#a08f66">巽</text><animate attributeName="opacity" values=".55;1;.55" dur="8s" begin="-1s" repeatCount="indefinite"/></g></g>
+      <g transform="rotate(90 260 260) translate(260 88)"><g transform="rotate(-90)"><use href="#bar" y="-12"/><use href="#breakbar"/><use href="#bar" y="12"/><text y="30" font-size="11" text-anchor="middle" fill="#a08f66">坎</text><animate attributeName="opacity" values=".55;1;.55" dur="8s" begin="-2s" repeatCount="indefinite"/></g></g>
+      <g transform="rotate(135 260 260) translate(260 88)"><g transform="rotate(-135)"><use href="#breakbar" y="-12"/><use href="#breakbar"/><use href="#bar" y="12"/><text y="30" font-size="11" text-anchor="middle" fill="#a08f66">艮</text><animate attributeName="opacity" values=".55;1;.55" dur="8s" begin="-3s" repeatCount="indefinite"/></g></g>
+      <g transform="rotate(180 260 260) translate(260 88)"><g transform="rotate(-180)"><use href="#breakbar" y="-12"/><use href="#breakbar"/><use href="#breakbar" y="12"/><text y="30" font-size="11" text-anchor="middle" fill="#a08f66">坤</text><animate attributeName="opacity" values=".55;1;.55" dur="8s" begin="-4s" repeatCount="indefinite"/></g></g>
+      <g transform="rotate(225 260 260) translate(260 88)"><g transform="rotate(-225)"><use href="#bar" y="-12"/><use href="#breakbar"/><use href="#breakbar" y="12"/><text y="30" font-size="11" text-anchor="middle" fill="#a08f66">震</text><animate attributeName="opacity" values=".55;1;.55" dur="8s" begin="-5s" repeatCount="indefinite"/></g></g>
+      <g transform="rotate(270 260 260) translate(260 88)"><g transform="rotate(-270)"><use href="#breakbar" y="-12"/><use href="#bar"/><use href="#breakbar" y="12"/><text y="30" font-size="11" text-anchor="middle" fill="#a08f66">离</text><animate attributeName="opacity" values=".55;1;.55" dur="8s" begin="-6s" repeatCount="indefinite"/></g></g>
+      <g transform="rotate(315 260 260) translate(260 88)"><g transform="rotate(-315)"><use href="#bar" y="-12"/><use href="#bar"/><use href="#breakbar" y="12"/><text y="30" font-size="11" text-anchor="middle" fill="#a08f66">兑</text><animate attributeName="opacity" values=".55;1;.55" dur="8s" begin="-7s" repeatCount="indefinite"/></g></g>
+    </g>
+
+    <!-- 金粒子：各自错相闪烁 -->
+    <g fill="#c9a05a" stroke="none">
+      <circle cx="152" cy="152" r="2"><animate attributeName="opacity" values=".15;.95;.15" dur="2.6s" begin="0s" repeatCount="indefinite"/></circle>
+      <circle cx="368" cy="140" r="1.6"><animate attributeName="opacity" values=".15;.95;.15" dur="3.2s" begin="-0.7s" repeatCount="indefinite"/></circle>
+      <circle cx="412" cy="308" r="2"><animate attributeName="opacity" values=".15;.95;.15" dur="2.2s" begin="-1.3s" repeatCount="indefinite"/></circle>
+      <circle cx="120" cy="330" r="1.6"><animate attributeName="opacity" values=".15;.95;.15" dur="3.6s" begin="-2.1s" repeatCount="indefinite"/></circle>
+      <circle cx="300" cy="452" r="2"><animate attributeName="opacity" values=".15;.95;.15" dur="2.8s" begin="-0.4s" repeatCount="indefinite"/></circle>
+      <circle cx="204" cy="60" r="1.6"><animate attributeName="opacity" values=".15;.95;.15" dur="3s" begin="-1.8s" repeatCount="indefinite"/></circle>
+      <circle cx="60" cy="220" r="1.8"><animate attributeName="opacity" values=".15;.95;.15" dur="2.4s" begin="-1.1s" repeatCount="indefinite"/></circle>
+      <circle cx="470" cy="212" r="1.8"><animate attributeName="opacity" values=".15;.95;.15" dur="3.4s" begin="-2.6s" repeatCount="indefinite"/></circle>
+      <circle cx="332" cy="332" r="1.4"><animate attributeName="opacity" values=".15;.95;.15" dur="2s" begin="-0.9s" repeatCount="indefinite"/></circle>
+      <circle cx="188" cy="352" r="1.4"><animate attributeName="opacity" values=".15;.95;.15" dur="3.8s" begin="-3s" repeatCount="indefinite"/></circle>
+    </g>
+
+    <!-- 太极：呼吸般浮起，光晕同步 -->
+    <circle cx="260" cy="260" r="84" fill="none" stroke="#c9a05a" stroke-width="1.5">
+      <animate attributeName="opacity" values=".12;.45;.12" dur="3.5s" repeatCount="indefinite"/>
+      <animate attributeName="r" values="82;88;82" dur="3.5s" repeatCount="indefinite"/>
+    </circle>
+    <g>
+      <animateTransform attributeName="transform" type="translate" values="0 0;0 -5;0 0" dur="5s" repeatCount="indefinite"/>
+      <g>
+        <animateTransform attributeName="transform" type="rotate" from="0 260 260" to="360 260 260" dur="120s" repeatCount="indefinite"/>
+        <circle cx="260" cy="260" r="48" fill="#2f4a62"/>
+        <path d="M260 212 A48 48 0 0 1 260 308 A24 24 0 0 1 260 260 A24 24 0 0 0 260 212 Z" fill="#b8934d"/>
+        <circle cx="260" cy="236" r="7" fill="#2f4a62"/>
+        <circle cx="260" cy="284" r="7" fill="#b8934d"/>
+        <circle cx="260" cy="260" r="48" fill="none" stroke="#a08f66" stroke-width="1" opacity=".5"/>
+      </g>
+    </g>
+  </g>
+</svg>

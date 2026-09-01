@@ -1,0 +1,197 @@
+    .stage {
+      position: relative;
+      display: grid;
+      grid-column: auto;
+      grid-row: auto;
+      place-items: center;
+      width: min(92vw, 760px);
+      aspect-ratio: 1;
+      margin: 0 auto;
+      isolation: isolate;
+    }
+
+    .stage::before,
+    .stage::after {
+      position: absolute;
+      content: "";
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .stage::before {
+      inset: 5%;
+      border: 1px solid rgba(176, 141, 87, .11);
+      box-shadow: 0 0 80px rgba(52, 73, 94, .1), inset 0 0 80px rgba(176, 141, 87, .06);
+    }
+
+    .stage::after {
+      inset: 1%;
+      border: 1px dashed rgba(52, 73, 94, .16);
+      animation: breathe 6s ease-in-out infinite;
+    }
+
+    .orbit,
+    .ring,
+    .trigrams,
+    .particles {
+      position: absolute;
+      inset: 0;
+    }
+
+    /* 宿主适配（R3 落地补记，非动画本体修改）：demo 源 .orbit 系 absolute，
+       .stage 的 place-items 不达流内 .taiji（demo 原页实测太极偏位 (-314,-319)）——
+       grid 居中唯一流内子代；absolute 诸环/卦/粒子定位与全部动画零影响。 */
+    .orbit { display: grid; place-items: center; }
+
+    .orbit::before {
+      position: absolute;
+      inset: 17%;
+      border-radius: 50%;
+      content: "";
+      background: conic-gradient(from 20deg, transparent, rgba(52, 73, 94, .12), transparent 24%, rgba(176, 141, 87, .13), transparent 56%);
+      filter: blur(18px);
+      opacity: .65;
+      animation: spin 15s linear infinite;
+    }
+
+    .ring { margin: auto; border-radius: 50%; pointer-events: none; }
+    .ring--outer { inset: 12%; border: 1px solid var(--line); animation: spin 44s linear infinite; }
+    .ring--outer::before,
+    .ring--outer::after {
+      position: absolute;
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      content: "";
+      background: var(--gold-light);
+      box-shadow: 0 0 16px 3px rgba(176, 141, 87, .55);
+    }
+    .ring--outer::before { top: -3px; left: 50%; }
+    .ring--outer::after { bottom: -3px; left: 50%; }
+    .ring--middle { inset: 22%; border: 1px dashed rgba(52, 73, 94, .25); animation: spin-reverse 68s linear infinite; }
+    .ring--inner { inset: 34%; border: 1px solid rgba(176, 141, 87, .24); }
+    .ring--energy { inset: 28%; border: 5px solid transparent; border-top-color: rgba(176, 141, 87, .65); border-right-color: rgba(52, 73, 94, .46); filter: drop-shadow(0 0 9px rgba(176, 141, 87, .35)); animation: spin 9s linear infinite; }
+
+    .trigrams { z-index: 2; }
+
+    .trigram {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      display: grid;
+      width: 76px;
+      padding: 8px 4px;
+      border: 0;
+      border-radius: 10px;
+      color: rgba(176, 141, 87, .67);
+      cursor: pointer;
+      background: transparent;
+      transform: translate(-50%, -50%) rotate(var(--angle)) translateY(calc(var(--radius) * -1));
+      transform-origin: center;
+      transition: color .3s ease, filter .3s ease;
+      animation: trigram-pulse 8s ease-in-out infinite;
+      animation-delay: calc(var(--i) * -1s);
+    }
+
+    .trigram__body { display: grid; gap: 7px; transform: rotate(var(--counter-angle)); }
+
+    .trigram:hover,
+    .trigram.is-active { color: var(--gold-light); filter: drop-shadow(0 0 10px rgba(176, 141, 87, .4)); }
+
+    .trigram__name {
+      order: 2;
+      font-size: 14px;
+      letter-spacing: .18em;
+      text-align: center;
+    }
+
+    .trigram__lines { display: grid; gap: 4px; }
+
+    .line {
+      display: block;
+      width: 46px;
+      height: 4px;
+      margin: auto;
+      border-radius: 4px;
+      background: currentColor;
+      box-shadow: 0 0 6px rgba(176, 141, 87, .14);
+    }
+
+    .line.is-broken {
+      background: linear-gradient(90deg, currentColor 0 39%, transparent 39% 61%, currentColor 61% 100%);
+    }
+
+    .taiji {
+      position: relative;
+      z-index: 3;
+      width: 132px;
+      aspect-ratio: 1;
+      border: 1px solid rgba(176, 141, 87, .7);
+      border-radius: 50%;
+      background: linear-gradient(90deg, var(--gold-light) 50%, var(--deep) 50%);
+      box-shadow: 0 0 0 10px rgba(176, 141, 87, .04), 0 0 42px rgba(176, 141, 87, .21);
+      animation: float 5s ease-in-out infinite;
+    }
+
+    .taiji::before,
+    .taiji::after {
+      position: absolute;
+      left: 50%;
+      border-radius: 50%;
+      content: "";
+      transform: translateX(-50%);
+    }
+
+    .taiji::before {
+      top: 0;
+      width: 50%;
+      height: 50%;
+      background: var(--deep);
+      box-shadow: 0 65px 0 var(--gold-light);
+    }
+
+    .taiji::after {
+      top: 21%;
+      width: 13px;
+      height: 13px;
+      background: var(--gold-light);
+      box-shadow: 0 65px 0 var(--deep);
+    }
+
+    .taiji__halo {
+      position: absolute;
+      inset: -19px;
+      border: 1px solid rgba(52, 73, 94, .22);
+      border-radius: 50%;
+      animation: pulse 3.5s ease-in-out infinite;
+    }
+
+    .particle {
+      position: absolute;
+      top: var(--y);
+      left: var(--x);
+      width: 3px;
+      height: 3px;
+      border-radius: 50%;
+      background: var(--gold-light);
+      box-shadow: 0 0 9px 2px rgba(176, 141, 87, .5);
+      animation: twinkle var(--duration) ease-in-out infinite var(--delay);
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes spin-reverse { to { transform: rotate(-360deg); } }
+    @keyframes trigram-pulse { 0%, 74%, 100% { opacity: .7; filter: none; transform: translate(-50%, -50%) rotate(var(--angle)) translateY(calc(var(--radius) * -1)) scale(1); } 84%, 92% { opacity: 1; filter: drop-shadow(0 0 14px rgba(176, 141, 87, .65)); transform: translate(-50%, -50%) rotate(var(--angle)) translateY(calc(var(--radius) * -1)) scale(1.08); } }
+    @keyframes breathe { 50% { transform: scale(1.025); opacity: .55; } }
+    @keyframes float { 50% { transform: translateY(-5px); } }
+    @keyframes pulse { 50% { transform: scale(1.08); opacity: .45; } }
+    @keyframes twinkle { 0%, 100% { opacity: .15; transform: scale(.7); } 50% { opacity: .95; transform: scale(1.35); } }
+
+    @media (max-width: 830px) { .stage { width: min(100%, 560px); } }
+
+    @media (max-width: 520px) {
+      .trigram { --radius: clamp(118px, 37vw, 160px); }
+      .taiji { width: 112px; }
+      .taiji::before { box-shadow: 0 55px 0 var(--gold-light); }
+      .taiji::after { box-shadow: 0 55px 0 var(--deep); }
+    }
+

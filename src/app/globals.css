@@ -1,0 +1,245 @@
+@import "tailwindcss";
+
+/* streamdown 预编译 Tailwind 类须纳入扫描（README 接线要求；路径相对本文件）。 */
+@source "../../node_modules/streamdown/dist/*.js";
+
+/* 古风设计令牌（00 报告 §三：墨/宣纸/朱砂/黛蓝/鎏金 + 五行矿物低饱和色）。 */
+@theme {
+  --color-paper: #f6f1e7;
+  --color-paper-deep: #ece3cf;
+  --color-ink: #2b2b2b;
+  --color-ink-soft: #6b6152;
+  --color-cinnabar: #9e2b25;
+  --color-dai: #34495e;
+  --color-gold: #b08d57;
+
+  --color-wuxing-mu: #4a7c59;
+  --color-wuxing-huo: #a84332;
+  --color-wuxing-tu: #b08d57;
+  --color-wuxing-jin: #7d838d;
+  --color-wuxing-shui: #34495e;
+
+  /* 仅系统衬线栈，不引外部字体（00 报告 §八 美学约束的 v1 落地）。 */
+  --font-serif-cn: "Noto Serif SC", "Songti SC", "STSong", "SimSun", serif;
+
+  /* streamdown 内部用 shadcn 风格语义类（bg-background/border-border 等），
+     此处把令牌映射到古风板代替其默认主题——不引 shadcn、不引第三方 CSS。 */
+  --color-background: var(--color-paper);
+  --color-foreground: var(--color-ink);
+  --color-muted: #efe6d2;
+  --color-muted-foreground: var(--color-ink-soft);
+  --color-border: #d8cdb4;
+  --color-sidebar: #f1ead9;
+  --color-primary: var(--color-cinnabar);
+  --color-primary-foreground: var(--color-paper);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--color-paper);
+  /* 宣纸暗纹：极淡的斜向纤维纹 + 四角晕染 */
+  background-image:
+    radial-gradient(ellipse at 12% 0%, rgb(176 141 87 / 0.06), transparent 45%),
+    radial-gradient(ellipse at 88% 100%, rgb(52 73 94 / 0.05), transparent 45%),
+    repeating-linear-gradient(
+      -45deg,
+      transparent 0px,
+      transparent 3px,
+      rgb(43 43 43 / 0.012) 3px,
+      rgb(43 43 43 / 0.012) 4px
+    );
+  color: var(--color-ink);
+  font-family: var(--font-serif-cn);
+}
+
+::selection {
+  background: rgb(158 43 37 / 0.18);
+}
+
+/* details 折叠：古卷式箭头 */
+details > summary {
+  list-style: none;
+  cursor: pointer;
+}
+details > summary::-webkit-details-marker {
+  display: none;
+}
+details > summary::before {
+  content: "▸";
+  display: inline-block;
+  margin-right: 0.35rem;
+  color: var(--color-gold);
+  transition: transform 0.15s ease;
+}
+details[open] > summary::before {
+  transform: rotate(90deg);
+}
+
+/* AI 推演脉冲 */
+@keyframes ink-pulse {
+  0%,
+  100% {
+    opacity: 0.25;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+.animate-ink-pulse {
+  animation: ink-pulse 1.2s ease-in-out infinite;
+}
+
+/* 卷二名字加成色段：挂载即自左端伸缩（换名重挂载即重播；免 rAF）。
+   ink-pulse 无 reduced-motion 门控属旧债，不在此追改；新动画自带。 */
+@keyframes bonus-grow {
+  from {
+    transform: scaleX(0);
+  }
+}
+.animate-bonus-grow {
+  animation: bonus-grow 0.3s ease-out;
+  transform-origin: left;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-bonus-grow {
+    animation: none;
+  }
+}
+
+/* 表单控件统一墨线风格 */
+input[type="text"],
+input[type="date"],
+input[type="time"],
+input[type="number"],
+select {
+  border: 1px solid rgb(43 43 43 / 0.3);
+  background: rgb(255 253 245 / 0.7);
+  padding: 0.35rem 0.6rem;
+  border-radius: 2px;
+  width: 100%;
+  font-family: inherit;
+}
+input:focus,
+select:focus {
+  outline: 2px solid rgb(176 141 87 / 0.45);
+  outline-offset: 1px;
+}
+input:disabled {
+  background: rgb(43 43 43 / 0.05);
+  color: var(--color-ink-soft);
+}
+
+/* AI 综解正文（streamdown 输出）古风覆写：标题/加粗/列表/引用/代码/表格。
+   用 .md-body 元素级链选择器（特异性高于 streamdown 自带单类），不 !important。 */
+.md-body {
+  font-size: 0.875rem;
+  line-height: 1.75;
+  color: var(--color-ink);
+}
+.md-body h1,
+.md-body h2,
+.md-body h3,
+.md-body h4,
+.md-body h5,
+.md-body h6 {
+  margin: 1rem 0 0.4rem;
+  font-weight: 700;
+  color: var(--color-ink);
+  letter-spacing: 0.05em;
+}
+.md-body h1 {
+  font-size: 1.2rem;
+}
+.md-body h2 {
+  font-size: 1.1rem;
+}
+.md-body h3,
+.md-body h4,
+.md-body h5,
+.md-body h6 {
+  font-size: 1rem;
+}
+.md-body p {
+  margin: 0.4rem 0;
+}
+/* streamdown 把 strong 映射为 span[data-streamdown="strong"]（非 <strong> 标签），双选择器覆盖 */
+.md-body strong,
+.md-body [data-streamdown='strong'] {
+  color: var(--color-cinnabar);
+  font-weight: 700;
+}
+.md-body em {
+  color: var(--color-ink-soft);
+}
+.md-body a {
+  color: var(--color-dai);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.md-body ul {
+  list-style: disc;
+  margin: 0.4rem 0;
+  padding-left: 1.5rem;
+}
+.md-body ol {
+  list-style: decimal;
+  margin: 0.4rem 0;
+  padding-left: 1.5rem;
+}
+.md-body li {
+  margin: 0.15rem 0;
+}
+.md-body li::marker {
+  color: var(--color-gold);
+}
+.md-body blockquote {
+  margin: 0.6rem 0;
+  border-left-color: var(--color-gold);
+  color: var(--color-ink-soft);
+}
+.md-body pre {
+  margin: 0.5rem 0;
+  overflow-x: auto;
+  font-size: 0.8rem;
+}
+.md-body code {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 0.8rem;
+}
+.md-body :not(pre) > code {
+  background: var(--color-paper-deep);
+  border: 1px solid var(--color-border);
+  border-radius: 2px;
+  padding: 0 0.25rem;
+  color: var(--color-cinnabar);
+}
+.md-body table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+.md-body th,
+.md-body td {
+  border: 1px solid var(--color-border);
+  padding: 0.25rem 0.5rem;
+  text-align: left;
+}
+.md-body th {
+  background: var(--color-paper-deep);
+  font-weight: 700;
+}
+.md-body hr {
+  margin: 0.9rem 0;
+  border-top: 1px dashed rgb(43 43 43 / 0.25);
+}
+
+/* 玄枢复刻 reduced-motion 门控（契约 v4 §5.5 R2）：demo index.html L247-249 逐字复制
+   （含原缩进）。`*` 非纯选择器不可入 CSS Module（Turbopack「Selector "*" is not pure」
+   编译拒），故置全局样式表——与 demo 全局语义一致：该偏好下全站动画停，
+   顺带盖住 animate-ink-pulse 无门控旧债。三行 declaration 一个字节未动。 */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; }
+    }
