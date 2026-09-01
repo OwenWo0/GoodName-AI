@@ -22,7 +22,7 @@ import {
 } from '@/utils/wuxing';
 import { 计算名字加成, 单位刻度, type 命中分类 } from '@/utils/name-bonus';
 import type { 评估状态 } from './use-name-evaluations';
-import { 档位Class } from './juan7-jiming';
+import { 档位Class } from './name-cards';
 import { Bar, Juan } from './ui';
 
 /** 叠加色段配色（元素级分类定色，字面量映射——Tailwind v4 不做动态类名拼接）。 */
@@ -121,7 +121,7 @@ export function Juan2Wuxing({ bazi, 评估 }: { bazi: BaziResult; 评估: 评估
       {/* 名字试选 chip 区：色段/虚线雷达的数据开关。重试唯一入口在卷六，此处只指路。 */}
       <div className="mb-4">
         {阶段 === 'error' ? (
-          <p className="text-xs text-cinnabar">契合评估未成——重试请移步卷六。</p>
+          <p className="text-xs text-cinnabar">契合评估未成——重试请移步意向吉名页。</p>
         ) : 评估列表.length === 0 ? (
           <p className="text-xs text-ink-soft">
             于卷六汇入意向吉名后，可在此试选一名，预览其对五行力量的加成走向

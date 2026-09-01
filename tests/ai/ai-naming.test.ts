@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   FINAL_NAMING_SYSTEM_PROMPT,
   buildFinalNamingMessages,
+  起名偏好指引句,
 } from '@/lib/ai/prompt-final-naming';
 import { DISCLAIMER_TEXT } from '@/lib/ai/prompt';
 import type { ChartResult } from '@/lib/types';
@@ -123,5 +124,52 @@ describe('AI 终选起名 Prompt 构造器 (prompt-final-naming.ts)', () => {
     expect(messages[1].content).toContain('宝宝性别为【男】');
     expect(messages[1].content).not.toContain('家长心仪意向名单');
     expect(messages[1].content).toContain('【终选起名核心指令】');
+    expect(messages[1].content).not.toContain('【家长起名偏好】');
+  });
+
+  it('起名偏好非空 → user 消息含【家长起名偏好】段、原文与指引句', () => {
+    const messages = buildFinalNamingMessages(
+      { chart: mockChart },
+      '偏好三字名；想要有水汽意象；避开网红爆款感；忌多音字',
+    );
+
+    const 用户消息 = messages[1].content;
+    expect(用户消息).toContain('【家长起名偏好】');
+    expect(用户消息).toContain('偏好三字名；想要有水汽意象；避开网红爆款感；忌多音字');
+    expect(用户消息).toContain(起名偏好指引句);
+    expect(用户消息).toContain('红线优先');
+  });
+
+  it('起名偏好缺省 / 空串 / 纯空白 → 不注入偏好段（向后兼容）', () => {
+    const 缺省 = buildFinalNamingMessages({ chart: mockChart });
+    const 空串 = buildFinalNamingMessages({ chart: mockChart }, '');
+    const 空白 = buildFinalNamingMessages({ chart: mockChart }, '   \n  ');
+
+    for (const messages of [缺省, 空串, 空白]) {
+      expect(messages[1].content).not.toContain('【家长起名偏好】');
+    }
+    expect(缺省[1].content).toBe(空串[1].content);
+  });
+
+  it('起名偏好 500 字边界 → 原文完整注入不截断；501 字仍注入（截断由 route zod 把关）', () => {
+    const 五百字 = '水'.repeat(500);
+    const 五百零一字 = '水'.repeat(501);
+
+    expect(buildFinalNamingMessages({ chart: mockChart }, 五百字)[1].content).toContain(五百字);
+    expect(buildFinalNamingMessages({ chart: mockChart }, 五百零一字)[1].content).toContain(
+      五百零一字,
+    );
+  });
+
+  it('偏好段与意向名单共存时互不干扰，均注入', () => {
+    const messages = buildFinalNamingMessages(
+      { chart: mockChart, 意向名单: ['景行'] },
+      '忌多音字',
+    );
+
+    const 用户消息 = messages[1].content;
+    expect(用户消息).toContain('家长心仪意向名单');
+    expect(用户消息).toContain('【家长起名偏好】');
+    expect(用户消息).toContain('忌多音字');
   });
 });

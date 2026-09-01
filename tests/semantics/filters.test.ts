@@ -1,11 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  evaluateSemanticSafety,
-  NEGATIVE_CHARS,
-  HARD_RISK_NAMES,
-  NON_NAME_WORDS,
-  CLICHE_NAMES,
-} from '@/lib/semantics/filters';
+import { evaluateSemanticSafety } from '@/lib/semantics/filters';
 
 describe('语义安全与去词汇化过滤 (evaluateSemanticSafety)', () => {
   it('正常文化人名评分为高分且安全', () => {

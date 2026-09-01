@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from 'vitest';
 import { POST } from '@/app/api/analyze/route';
 
 /** 捕获 streamAnalyzeEvents 实参 messages，断言意向确实到达 prompt 层（不 import 其内部实现）。 */
@@ -13,7 +13,10 @@ const originalFetch = globalThis.fetch;
 const sseEncoder = new TextEncoder();
 
 beforeAll(() => {
-  globalThis.fetch = (async (_input: any, init?: any) => {
+  globalThis.fetch = (async (
+    _input: Parameters<typeof fetch>[0],
+    init?: Parameters<typeof fetch>[1],
+  ) => {
     try {
       if (init?.body) {
         const parsed = JSON.parse(String(init.body));

@@ -5,7 +5,7 @@
 import type { ReactNode } from 'react';
 import type { GeItem } from '@/lib/types';
 
-export const JUAN_NAMES = ['卷一', '卷二', '卷三', '卷四', '卷五', '卷六', '卷七'] as const;
+export const JUAN_NAMES = ['卷一', '卷二', '卷三', '卷四', '卷五', '卷六'] as const;
 
 /** 卷段外壳：朱印卷次竖排 + 题名 + 一句总述 + 明细 + 尾注。 */
 export function Juan({

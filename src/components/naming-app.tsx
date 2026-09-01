@@ -7,13 +7,15 @@
  * 批次栈（任务 #28）：result 态持有 batches（历次排盘结果，append-only）+ 当前批索引。
  * 表单提交成功 → batches 重置为 [新盘]；「重新生成」以 request + 排除已选=全部批次候选名并集
  * 再跑一次固定算法（候选池完全确定性，排重只能靠排除已呈现名，禁止前端随机伪装）；
- * 返回空候选 → 不 push，灰字提示池已用尽；成功 → push 并切到新批。卷六/卷七只收控制 props，
- * 排盘与批次请求全部由本组件发起（单向数据流）；意向吉名状态亦在此持有
+ * 返回空候选 → 不 push，灰字提示池已用尽；成功 → push 并切到新批。卷七只收控制 props
+ * （原卷六意向清单已独立成 /intent 页，C7），排盘与批次请求全部由本组件发起（单向数据流）；
+ * 意向吉名状态亦在此持有
  * （契约 v2 §2 + v2.1：localStorage 镜像 + 加入/批量加入/移除，草案排盘成功自动入列）。
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ChartRequest } from '@/utils/chart-request';
 import { USE_MOCK_CHART, requestChart } from '@/utils/chart-source';
+import { saveLastChart, saveLastInput } from '@/utils/draft-memory';
 import type { ChartResultForUi } from '@/utils/mock-chart';
 import {
   addIntentEntries,
@@ -97,6 +99,10 @@ export function NamingApp() {
       try {
         const chart = await requestChart(req, ac.signal);
         if (ac.signal.aborted) return;
+        // 本机记忆（C1）：最新盘+关键输入写 sessionStorage——/intent 页「自动带盘」与姓氏默认值之源；
+        // util 内静默 throw-free，失败不影响本次排盘呈现。
+        saveLastChart(chart);
+        saveLastInput({ 姓氏: req.姓氏, 性别: req.性别, 名字形式: req.名字形式 });
         // 草案自动入意向（来源=草案；重名/非法名由 util 幂等处理，重试不重复入列）
         if (req.名字草案) 加入意向(req.名字草案, '草案');
         setStage({ kind: 'result', batches: [chart], 当前批索引: 0, request: req });
@@ -196,7 +202,7 @@ export function NamingApp() {
               </div>
             ) : null}
             {/* 抽卡喜用神（契约 v3 §3.3）：本渲染点在 form/error 分支（type 收窄保证盘不在场）
-                →恒 []（全库等概率）；InputForm.喜用神 prop 已备，布局演进时此处改传盘值即生效。 */}
+                →恒 []（全库等概率）；InputForm 现无 喜用神 prop，布局演进需先加 prop 再传盘值。 */}
             <InputForm onSubmit={(req) => void runChart(req)} busy={false} />
           </div>
         ) : null}

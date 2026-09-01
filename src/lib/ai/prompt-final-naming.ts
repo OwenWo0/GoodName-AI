@@ -68,12 +68,23 @@ export interface FinalNamingInput {
   意向评估?: readonly EvaluatedName[];
 }
 
+/** 家长起名偏好的遵从口径指引（注入 user 消息，随偏好原文同段呈现） */
+export const 起名偏好指引句 =
+  '偏好在不违背算法红线（避讳/禁用/表外字）与审美底线的前提下最高优先级遵从；与红线冲突时红线优先并在文末温和说明取舍。';
+
 /**
  * 构造送入 LLM 的 5 名终选消息对
+ *
+ * @param 起名偏好 可选家长起名偏好（route 层已 zod 校验 ≤500 字并 trim）；
+ *                 非空时在 user 消息注入【家长起名偏好】段 + 指引句，缺省/空白则不注入。
  */
-export function buildFinalNamingMessages(input: FinalNamingInput): ChatMessage[] {
+export function buildFinalNamingMessages(
+  input: FinalNamingInput,
+  起名偏好?: string,
+): ChatMessage[] {
   const { chart, 意向名单, 意向评估 } = input;
   const 性别 = chart.输入.性别 ?? '通用';
+  const 偏好文本 = 起名偏好?.trim() ?? '';
 
   const userPayload: Record<string, unknown> = {
     ...chart,
@@ -91,9 +102,18 @@ export function buildFinalNamingMessages(input: FinalNamingInput): ChatMessage[]
     userPayload['意向名多维评估数据'] = [...意向评估];
   }
 
+  const 偏好段 =
+    偏好文本 === ''
+      ? ''
+      : `【家长起名偏好】
+${偏好文本}
+${起名偏好指引句}
+
+`;
+
   const userContent = `${stableStringify(userPayload)}
 
-【终选起名核心指令】
+${偏好段}【终选起名核心指令】
 宝宝性别为【${性别}】。请从最高维度的文学审美、意境画面、古典诗词出处与性别气质出发，为宝宝甄选推演【5个最具有美学品质与文化底蕴的好名字】。坚决杜绝${性别 === '男' ? '男生女名' : '女生男名'}，严格遵守【审美第一 · 核心指引】与【输出 Markdown 格式规范】，文末附带固定免责声明。`;
 
   return [

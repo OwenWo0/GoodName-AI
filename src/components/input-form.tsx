@@ -3,6 +3,9 @@
 /**
  * 输入表单：字段即 /api/chart 请求体（契约冻结，见 utils/chart-request.ts）。
  * 校验走 zod；勾「时辰未知」→ 时间禁用并示降级说明；历法=农历 → 出闰月勾选。
+ * 赛道拆分（契约 C7）：指定字/抽卡区块已摘除，归 /draw 赛道（DrawWorkbench）——
+ * FormSnapshot 存储字段原样保留（旧 localStorage 快照照常 load，多余键 zod 浅校验剥除，
+ * 不丢用户其余记忆）；buildPayload 不再上送指定字。
  */
 import { useEffect, useMemo, useState } from 'react';
 import {
@@ -17,7 +20,6 @@ import {
   saveFormSnapshot,
   type FormSnapshot,
 } from '@/utils/form-storage';
-import { CharDrawPanel } from './char-draw-panel';
 import { HintCard } from './ui';
 
 /**
@@ -89,25 +91,18 @@ function buildPayload(form: FormState, errors: Record<string, string>): Record<s
   if (form.城市) payload['城市'] = form.城市;
   if (form.夏令时) payload['夏令时'] = true;
   if (form.启用辈字) payload['辈字'] = { 字: form.辈字.trim(), 位置: form.辈字位置 };
-  const 指定字文本 = form.指定字文本.trim();
-  if (指定字文本) payload['指定字'] = { 字: 指定字文本, 位置: form.指定字位置 };
+  // 指定字已摘（契约 C7）：旧快照可能仍带 指定字文本/指定字位置 值——不读取不上送，抽卡赛道自持该字段。
   const banned = splitHanChars(form.禁用字文本);
   if (banned.length > 0) payload['禁用字'] = banned;
   return payload;
 }
 
-/**
- * 喜用神（契约 v3 §3.3 抽卡口径）：结果态盘才传，否则空数组=全库等概率。
- * 现两段式布局表单与盘不同时在场→恒 []；形状先按契约接好，布局演进自动生效。
- */
 export function InputForm({
   onSubmit,
   busy,
-  喜用神 = [],
 }: {
   onSubmit: (req: ChartRequest) => void;
   busy: boolean;
-  喜用神?: readonly string[];
 }) {
   // 初始恒为 INITIAL：localStorage 读取放挂载后 effect（SSR 端无 storage，
   // 若在初始值处读取会导致服务端/客户端首帧 HTML 不一致 = hydration 报错）。
@@ -168,15 +163,7 @@ export function InputForm({
             <Label>名字形式</Label>
             <select
               value={form.名字形式}
-              onChange={(e) => {
-                const 形式 = e.target.value as FormState['名字形式'];
-                // 切单名时指定字「第二」非法（schema 同源约束），先行归位防提交红字。
-                setForm((prev) => ({
-                  ...prev,
-                  名字形式: 形式,
-                  ...(形式 === '单名' && prev.指定字位置 === '第二' ? { 指定字位置: '任一' as const } : {}),
-                }));
-              }}
+              onChange={(e) => set('名字形式', e.target.value as FormState['名字形式'])}
             >
               <option value="双名">双名</option>
               <option value="单名">单名</option>
@@ -215,49 +202,6 @@ export function InputForm({
               </label>
             </>
           ) : null}
-        </div>
-        {/* 指定字（契约 v3 §1.5）：硬约束——候选名部必含此字；留空=不启用。 */}
-        <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm">
-          <span className="font-bold tracking-wider">指定字</span>
-          <input
-            type="text"
-            className="w-16"
-            value={form.指定字文本}
-            onChange={(e) => set('指定字文本', e.target.value)}
-            placeholder="1 字"
-            aria-label="指定字"
-          />
-          {/* 抽卡（契约 v3 §3.3 lead 接线）：排除字=当前姓氏拆字+避讳拆字；用它→回填指定字框。 */}
-          <CharDrawPanel
-            喜用神={喜用神}
-            排除字={[...splitHanChars(form.姓氏), ...splitHanChars(form.避讳字文本)]}
-            onPick={(字) => set('指定字文本', 字)}
-          />
-          <span className="flex items-center gap-1">
-            位置
-            {(['任一', '第一', '第二'] as const).map((位) => {
-              const 禁用 = 位 === '第二' && form.名字形式 === '单名';
-              const 选中 = form.指定字位置 === 位;
-              return (
-                <button
-                  key={位}
-                  type="button"
-                  disabled={禁用}
-                  title={禁用 ? '单名仅一位' : undefined}
-                  aria-pressed={选中}
-                  onClick={() => set('指定字位置', 位)}
-                  className={
-                    选中
-                      ? 'border border-cinnabar bg-cinnabar px-2 py-0.5 text-xs font-bold text-paper'
-                      : 'border border-ink/40 px-2 py-0.5 text-xs text-ink-soft hover:border-cinnabar hover:text-cinnabar disabled:cursor-not-allowed disabled:opacity-40'
-                  }
-                >
-                  {位}
-                </button>
-              );
-            })}
-          </span>
-          {form.名字形式 === '单名' ? <span className="text-xs text-ink-soft">单名仅一位</span> : null}
         </div>
         <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
           <label>

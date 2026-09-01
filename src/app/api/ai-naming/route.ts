@@ -23,6 +23,12 @@ const namingShallowSchema = z
   })
   .passthrough();
 
+const 起名偏好Schema = z
+  .string({ error: '起名偏好须为文本。' })
+  .transform((s) => s.trim())
+  .refine((s) => s.length <= 500, { error: '起名偏好过长（上限 500 字）。' })
+  .optional();
+
 function 深度超限(v: unknown, max: number): boolean {
   const stack: Array<{ node: unknown; depth: number }> = [{ node: v, depth: 0 }];
   while (stack.length > 0) {
@@ -89,6 +95,12 @@ export async function POST(req: Request): Promise<Response> {
   const 意向评估 = rawData.意向评估 as EvaluatedName[] | undefined;
   const chart = rawData as unknown as ChartResult;
 
+  const 偏好解析 = 起名偏好Schema.safeParse(rawData.起名偏好);
+  if (!偏好解析.success) {
+    return jsonError(400, 偏好解析.error.issues[0]?.message ?? '起名偏好不合法。');
+  }
+  const 起名偏好 = 偏好解析.data && 偏好解析.data.length > 0 ? 偏好解析.data : undefined;
+
   let env;
   try {
     env = getLlmEnv();
@@ -96,11 +108,14 @@ export async function POST(req: Request): Promise<Response> {
     return jsonError(503, '服务端未配置大模型端点（缺少 LLM_* 环境变量），暂无法提供 AI 终选起名。');
   }
 
-  const messages = buildFinalNamingMessages({
-    chart,
-    意向名单: 意向吉名,
-    意向评估,
-  });
+  const messages = buildFinalNamingMessages(
+    {
+      chart,
+      意向名单: 意向吉名,
+      意向评估,
+    },
+    起名偏好,
+  );
 
   const encoder = new TextEncoder();
   const doneFrame = encoder.encode('data: [DONE]\n\n');

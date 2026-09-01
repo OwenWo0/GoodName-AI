@@ -13,6 +13,9 @@ import { createSseParser, type SseEvent } from '@/utils/sse';
 
 type Phase = 'idle' | 'streaming' | 'done' | 'error';
 
+/** 起名偏好字数上限（与 /api/ai-naming 的 zod 上限一致） */
+const 偏好上限 = 500;
+
 export interface AiNamingProps {
   readonly chart: ChartResultForUi;
   readonly 意向名单?: readonly string[];
@@ -30,6 +33,7 @@ export function AiNaming({
   const [reasoning, setReasoning] = useState('');
   const [content, setContent] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [偏好, set偏好] = useState('');
   const abortRef = useRef<AbortController | null>(null);
 
   useEffect(() => () => abortRef.current?.abort(), []);
@@ -63,6 +67,7 @@ export function AiNaming({
           ...(意向名单 !== undefined && 意向名单.length > 0
             ? { 意向吉名: [...意向名单], 意向评估: [...(意向评估 ?? [])] }
             : {}),
+          ...(偏好.trim() !== '' ? { 起名偏好: 偏好.trim() } : {}),
         }),
         signal: ac.signal,
       });
@@ -106,7 +111,7 @@ export function AiNaming({
       setError(e instanceof Error ? e.message : '未知错误');
       setPhase('error');
     }
-  }, [chart, 意向名单, 意向评估, applyEvent]);
+  }, [chart, 意向名单, 意向评估, 偏好, applyEvent]);
 
   return (
     <div className="mt-6 border-2 border-cinnabar/40 bg-paper/80 p-5 shadow-sm">
@@ -130,8 +135,29 @@ export function AiNaming({
         </p>
       </div>
 
+      {/* 起名偏好输入区（留空则不提交该字段；推演中禁编辑，改后钮仍为「重新推演」） */}
+      <div className="mt-4">
+        <label htmlFor="ai-naming-preference" className="block text-xs font-bold text-ink">
+          起名偏好（可选）
+        </label>
+        <textarea
+          id="ai-naming-preference"
+          value={偏好}
+          onChange={(ev) => set偏好(ev.target.value)}
+          maxLength={偏好上限}
+          rows={3}
+          disabled={phase === 'streaming'}
+          aria-label="起名偏好（可选）"
+          placeholder="如：偏好三字名；想要有水汽意象；避开网红爆款感；忌多音字"
+          className="mt-1 w-full resize-y border border-ink/30 bg-paper/60 p-2 text-sm leading-relaxed disabled:opacity-50"
+        />
+        <p className="mt-1 text-right text-[11px] text-ink-soft">
+          {偏好.length} / {偏好上限}
+        </p>
+      </div>
+
       {/* 操作按钮区 */}
-      <div className="mt-4 flex flex-wrap items-center gap-3">
+      <div className="mt-2 flex flex-wrap items-center gap-3">
         <button
           type="button"
           onClick={startNaming}

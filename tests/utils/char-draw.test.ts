@@ -1,7 +1,7 @@
 /**
- * 单字抽卡（契约 v3 §3.1/§6 draw 段）单测：注入 rng 确定性、喜用优先、
- * 喜用滤空回退全集（回退不越过排除字）、排除全灭→null、空库→null、
- * rng=0 / rng→1⁻ 边界=首/尾元素。纯 util，node 环境。
+ * 单字抽卡（契约 v3 §3.1/§6 draw 段 + C6 五行硬滤）单测：注入 rng 确定性、喜用优先、
+ * 喜用滤空回退全集（回退不越过排除字与五行硬滤）、五行硬滤无回退（滤空→null）、
+ * 排除全灭→null、空库→null、rng=0 / rng→1⁻ 边界=首/尾元素。纯 util，node 环境。
  */
 import { describe, expect, it, vi } from 'vitest';
 import { 抽卡, type 好意向字 } from '@/utils/char-draw';
@@ -89,6 +89,42 @@ describe('抽卡 空态与排除', () => {
       const 结果 = 抽卡(库, { 喜用神: ['水'], 排除字: ['沐'], rng: rng固定(r) });
       expect(结果).toEqual(字('明', '水')); // 喜用池仅剩 明
     }
+  });
+});
+
+describe('抽卡 五行硬滤（契约 C6）', () => {
+  it('五行=随机 与缺省等价：不滤，全库等概率', () => {
+    expect(抽卡(库, { 五行: '随机', rng: rng固定(0.5) })).toEqual(字('林', '木'));
+    expect(抽卡(库, { 五行: undefined, rng: rng固定(0.5) })).toEqual(字('林', '木'));
+  });
+
+  it('指定五行 → 只出自该属性池；rng→1⁻ 落该池尾元素，rng 恰调用一次', () => {
+    const rng = vi.fn(() => 1 - Number.EPSILON);
+    const 结果 = 抽卡(库, { 五行: '水', rng });
+    expect(rng).toHaveBeenCalledTimes(1); // 以滤后池缩放，非全库
+    expect(结果).toEqual(字('沐', '水')); // 水池=[明,沐]，尾=沐（未滤则落 炎）
+  });
+
+  it('硬滤无回退：库无该属性 → null（对比喜用滤空是回退）', () => {
+    expect(抽卡(库, { 五行: '土', rng: rng固定(0) })).toBeNull(); // 库无土字
+    expect(抽卡(库, { 五行: '金', rng: rng固定(0) })).toBeNull();
+  });
+
+  it('顺序：排除字先于五行硬滤——排除吃光该属性池 → null', () => {
+    expect(抽卡(库, { 五行: '水', 排除字: ['明', '沐'], rng: rng固定(0) })).toBeNull();
+  });
+
+  it('硬滤与喜用叠加：喜用滤空只回退到五行滤后池，绝不越回全集', () => {
+    // 五行=水 → 池=[明,沐]；喜用=木 在此池上滤空 → 回退 [明,沐]，任何 rng 都落水字
+    for (const r of [0, 0.4, 0.99, 1 - Number.EPSILON]) {
+      const 结果 = 抽卡(库, { 五行: '水', 喜用神: ['木'], rng: rng固定(r) });
+      expect(结果).not.toBeNull();
+      expect(结果!.五行).toBe('水');
+    }
+  });
+
+  it('五行硬滤命中且喜用同向 → 抽取池=交集，排除字仍优先', () => {
+    expect(抽卡(库, { 五行: '水', 喜用神: ['水'], 排除字: ['明'], rng: rng固定(0) })).toEqual(字('沐', '水'));
   });
 });
 

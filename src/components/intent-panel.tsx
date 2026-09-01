@@ -1,16 +1,16 @@
 'use client';
 
 /**
- * 卷六 · 意向吉名（契约 v2 §1/§2/§6 + v2.1）：本机意向名清单（草案/点赞/导入三来源），
- * 顶部「批量导入」面板（粘贴文本切名 → 预览计数 → 确认走 意向.批量加入），
- * 评估状态已上提 naming-app（use-name-evaluations）由 props 注入——卷二名字
- * 加成对比共用同一份评估，请求时机与上提前一致（result 树挂载即取）；
- * 每卡转呈 五行/平仄/五格Mini/契合档/表外字警告，移除即写回存储。
- * 清单按 契合.分 降序渲染（并列保添加序）——纯展示层排序，存储仍按添加序不动。
+ * 意向吉名独立页（/intent）组件库——原卷六 juan6-intent.tsx 迁入（赛道拆分 C7）：
+ * ImportPanel（批量导入：粘贴文本切名 → 预览计数 → 确认走 意向.批量加入）、
+ * IntentCard（名 + 来源徽 + 五行/平仄 + 五格Mini + 契合区 + 表外字警告，移除即写回存储）、
+ * AiIntentAnswer（AI 点评意向名 → POST /api/analyze-names SSE）。
+ * 卡内 WugeMini/契合区 改由 name-cards 共享（C4）；清单按 契合.分 降序渲染
+ * （并列保添加序）——纯展示层排序，存储仍按添加序不动。
+ * 评估状态由页面层持有（use-name-evaluations 泛化变体，盘/手动两途）经 props 注入；
  * 评估失败→朱字可重试（此处为唯一重试入口，卷二错误文案指回本页）。
- * 底部「AI 点评意向名」→ POST /api/analyze-names SSE（镜像 ai-answer.tsx：
- * 帧协议/错误帧不覆盖/[DONE] 不覆盖错误/卸载与重问 abort 清理同款纪律）。
  * 隐私口径：名单仅存本机浏览器，此处只把评估结果交服务端点评，不存服务器。
+ * 组件名用 ASCII——react-hooks 插件不认 CJK 组件名（先例 RadarSvg）。
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { MarkdownBodyAsync } from '@/components/markdown-body-async';
@@ -20,9 +20,10 @@ import { INTENT_NAMES_MAX, type Intent来源 } from '@/utils/intent-names-storag
 import { parseIntentImport } from '@/utils/parse-intent-import';
 import { WUXING_TEXT_CLASS } from '@/utils/wuxing';
 import { createSseParser, type SseEvent } from '@/utils/sse';
+import { WugeMini, 契合区 } from '@/components/name-cards';
+import type { 意向控制 } from './juan7-jiming';
 import type { 评估状态 } from './use-name-evaluations';
-import { WugeMini, 契合区, type 意向控制 } from './juan7-jiming';
-import { Juan, WuxingChip } from './ui';
+import { WuxingChip } from './ui';
 
 /** 来源徽配色（字面量映射——Tailwind v4 不做动态类名拼接）：草案/点赞金徽一像素不动，导入黛蓝区分。 */
 const 来源Class: Readonly<Record<Intent来源, string>> = {
@@ -32,7 +33,7 @@ const 来源Class: Readonly<Record<Intent来源, string>> = {
 };
 
 /** 意向卡：名 + 来源徽 + 五行/平仄 + 移除 + 五格Mini + 契合区 + 表外字警告。 */
-function IntentCard({
+export function IntentCard({
   评估: e,
   来源,
   onRemove,
@@ -83,8 +84,9 @@ function IntentCard({
 
 type AI阶段 = 'idle' | 'streaming' | 'done' | 'error';
 
-/** AI 点评意向名：请求体=契约 §5（命盘摘要 + 评估≤30）；流式纪律同 ai-answer.tsx。 */
-function AiIntentAnswer({ chart, 评估 }: { chart: ChartResult; 评估: readonly EvaluatedName[] }) {
+/** AI 点评意向名：请求体=契约 §5（命盘摘要 + 评估≤30）；流式纪律同 ai-answer.tsx。
+ *  四柱为服务端 zod 硬要求——调用方仅在 loadLastChart() 有盘时渲染本件。 */
+export function AiIntentAnswer({ chart, 评估 }: { chart: ChartResult; 评估: readonly EvaluatedName[] }) {
   const [阶段, set阶段] = useState<AI阶段>('idle');
   const [推演, set推演] = useState('');
   const [正文, set正文] = useState('');
@@ -226,12 +228,12 @@ function 折显(非法项: readonly string[]): string {
 }
 
 /**
- * 批量导入面板（契约 v2.1）：钮恒置于 Juan 体最顶、空态早退之前——名单为空
+ * 批量导入面板（契约 v2.1）：钮恒置于面板最顶、空态早退之前——名单为空
  * 正是要导入的时刻。展开才挂 textarea；预览 useMemo 三桶计数；确认走
  * 意向.批量加入（存储层只填容量丢尾部），反馈文案含满编补救指引。
- * 组件名用 ASCII——react-hooks 插件不认 CJK 组件名（先例 AiIntentAnswer/RadarSvg）。
+ * 解禁=false（姓氏未填/非法）→ 钮灰置不点亮：导入即评估，缺姓氏无从谈起契合。
  */
-function ImportPanel({ 意向 }: { 意向: 意向控制 }) {
+export function ImportPanel({ 意向, 解禁 = true }: { 意向: 意向控制; 解禁?: boolean }) {
   const [展开, set展开] = useState(false);
   const [文本, set文本] = useState('');
   const [反馈, set反馈] = useState<string | null>(null);
@@ -256,11 +258,14 @@ function ImportPanel({ 意向 }: { 意向: 意向控制 }) {
         <button
           type="button"
           aria-expanded={展开}
+          disabled={!解禁}
+          title={解禁 ? undefined : '先填写姓氏（1-2 个汉字），导入后方可逐名评估'}
           onClick={() => (展开 ? 收起() : set展开(true))}
-          className="border border-ink/40 px-3 py-1 text-sm font-bold text-ink transition-colors hover:border-cinnabar hover:text-cinnabar"
+          className="border border-ink/40 px-3 py-1 text-sm font-bold text-ink transition-colors hover:border-cinnabar hover:text-cinnabar disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-ink/40 disabled:hover:text-ink"
         >
           {展开 ? '收起导入' : '批量导入'}
         </button>
+        {!解禁 ? <span className="text-xs text-ink-soft">先填姓氏，导入方可点亮。</span> : null}
         {反馈 ? <p className="text-xs text-ink-soft">{反馈}</p> : null}
       </div>
       {展开 ? (
@@ -303,64 +308,40 @@ function ImportPanel({ 意向 }: { 意向: 意向控制 }) {
   );
 }
 
-/** 卷六主体：清单评估 + AI 点评。意向与评估状态全部由 naming-app 注入（单向数据流）。 */
-export function Juan6Intent({
-  chart,
-  意向,
-  评估: { 评估列表, 阶段, 错误, 重试 },
-}: {
-  chart: ChartResult;
-  意向: 意向控制;
-  评估: 评估状态;
-}) {
+/** 意向清单主体：计数行 + 错误重试 + 契合分降序卡片列（评估状态由页面层注入，单向数据流）。 */
+export function IntentNameList({ 意向, 评估: { 评估列表, 阶段, 错误, 重试 } }: { 意向: 意向控制; 评估: 评估状态 }) {
   // 契合分降序（Array.sort 稳定→并列保添加序）；存储序=添加序不受影响
   const 有序评估 = useMemo(() => [...评估列表].sort((a, b) => b.契合.分 - a.契合.分), [评估列表]);
   return (
-    <Juan
-      id="juan6"
-      卷="卷六"
-      题="意向吉名"
-      述="草案与点赞吉名尽汇于此：逐名评估八字契合，本机留存不上传，可随时移除。"
-      尾注="意向吉名仅存于本机浏览器（localStorage），换设备/清缓存即失；评估与 AI 点评按需请求服务端，名单本身不上传。"
-    >
-      <ImportPanel 意向={意向} />
-      {意向.条目.length === 0 ? (
-        <p className="py-6 text-center text-sm leading-relaxed text-ink-soft">
-          卷中尚无吉名。在上方表单填入名字草案再排盘、于卷七候选卡点「♡ 入卷六」，或用上方「批量导入」一次贴入多名，吉名即汇入此处逐名评估。
-        </p>
-      ) : (
-        <>
-          <p className="mb-3 text-xs text-ink-soft">
-            共 {意向.条目.length} 名 · 按契合分高到低排列
-            {阶段 === 'loading' ? ' · 评估中…' : ''}
-          </p>
-          {阶段 === 'error' ? (
-            <div className="mb-3 border border-cinnabar/40 bg-cinnabar/5 px-3 py-2">
-              <p className="text-sm font-medium text-cinnabar">意向评估失败：{错误}</p>
-              <button
-                type="button"
-                onClick={重试}
-                className="mt-2 border border-cinnabar px-3 py-1 text-xs font-bold text-cinnabar transition-colors hover:bg-cinnabar hover:text-paper"
-              >
-                重试
-              </button>
-            </div>
-          ) : null}
-          {阶段 !== 'error' || 评估列表.length > 0 ? (
-            <ul className="space-y-3">
-              {有序评估.map((e) => (
-                <IntentCard
-                  key={e.名}
-                  评估={e}
-                  来源={意向.条目.find((入) => 入.名 === e.名)?.来源 ?? '点赞'}
-                  onRemove={意向.移除}
-                />
-              ))}
-            </ul>
-          ) : null}
-          <AiIntentAnswer chart={chart} 评估={有序评估} />
-        </>
-      )}
-    </Juan>
+    <>
+      <p className="mb-3 text-xs text-ink-soft">
+        共 {意向.条目.length} 名 · 按契合分高到低排列
+        {阶段 === 'loading' ? ' · 评估中…' : ''}
+      </p>
+      {阶段 === 'error' ? (
+        <div className="mb-3 border border-cinnabar/40 bg-cinnabar/5 px-3 py-2">
+          <p className="text-sm font-medium text-cinnabar">意向评估失败：{错误}</p>
+          <button
+            type="button"
+            onClick={重试}
+            className="mt-2 border border-cinnabar px-3 py-1 text-xs font-bold text-cinnabar transition-colors hover:bg-cinnabar hover:text-paper"
+          >
+            重试
+          </button>
+        </div>
+      ) : null}
+      {阶段 !== 'error' || 评估列表.length > 0 ? (
+        <ul className="space-y-3">
+          {有序评估.map((e) => (
+            <IntentCard
+              key={e.名}
+              评估={e}
+              来源={意向.条目.find((入) => 入.名 === e.名)?.来源 ?? '点赞'}
+              onRemove={意向.移除}
+            />
+          ))}
+        </ul>
+      ) : null}
+    </>
   );
 }

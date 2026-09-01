@@ -1,8 +1,10 @@
 'use client';
 
 /**
- * 手卷结果页：卷首题签（命主概要）+ 七卷正文。数据=ChartResult（+UI 扩展字段）。
- * 卷序（契约 v2）：卷六=意向吉名（本机清单评估），卷七=吉名呈览（原卷六顺延）。
+ * 手卷结果页：卷首题签（命主概要）+ 正文诸卷。数据=ChartResult（+UI 扩展字段）。
+ * 赛道拆分（C7）：原卷六「意向吉名」独立成 /intent 页，本层摘除；卷七=吉名呈览保留
+ * （卷次标号/like 文案改口由 name-cards/juan7 侧负责）。意向与评估 props 下发链不动
+ * ——卷二名字加成与卷七 like 仍共用 naming-app 持有的同一份状态。
  * 卷四五联动（契约 v4 §2.2）：卷四/卷五共享的意向名选择态持于本层（纯函数见 utils/roll45-name-select）；
  * 选项 <2（显示下拉=false）时不传 选择 → 卷四五逐字节现状。
  */
@@ -14,7 +16,6 @@ import { Juan2Wuxing } from './juan2-wuxing';
 import { Juan3Xiyongshen } from './juan3-xiyongshen';
 import { Juan4Wuge } from './juan4-wuge';
 import { Juan5Pingze } from './juan5-pingze';
-import { Juan6Intent } from './juan6-intent';
 import type { 批次控制, 意向控制 } from './juan7-jiming';
 import { Juan7Jiming } from './juan7-jiming';
 import type { 评估状态 } from './use-name-evaluations';
@@ -26,7 +27,6 @@ const NAV: Array<{ href: string; 题: string }> = [
   { href: '#juan3', 题: '喜用神' },
   { href: '#juan4', 题: '五格' },
   { href: '#juan5', 题: '平仄' },
-  { href: '#juan6', 题: '意向' },
   { href: '#juan7', 题: '吉名' },
 ];
 
@@ -87,7 +87,6 @@ export function ResultScroll({
       <Juan3Xiyongshen x={chart.xiyongshen} />
       <Juan4Wuge wuge={chart.wuge} 草案名={草案名} 选择={选择} 评估列表={评估.评估列表} />
       <Juan5Pingze pingze={chart.名字草案平仄} 草案名={草案名} 选择={选择} 评估列表={评估.评估列表} />
-      <Juan6Intent chart={chart} 意向={意向} 评估={评估} />
       <Juan7Jiming chart={chart} 批次={批次控制} 意向={意向} 评估列表={评估.评估列表} />
     </div>
   );

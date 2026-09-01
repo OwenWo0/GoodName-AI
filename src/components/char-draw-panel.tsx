@@ -10,8 +10,11 @@
 import { useCallback, useState } from 'react';
 import 库Json from '@/data/good-intent-chars.json';
 import { WUXING_TEXT_CLASS } from '@/utils/wuxing';
-import { 抽卡, type 好意向字 } from '@/utils/char-draw';
+import { 抽卡, type 五行筛选, type 好意向字 } from '@/utils/char-draw';
 import { WuxingChip } from './ui';
+
+/** 五行筛选钮顺序（契约 C6：随机/金/木/水/火/土，default 随机）。 */
+const 筛选钮: readonly 五行筛选[] = ['随机', '金', '木', '水', '火', '土'];
 
 /**
  * 编译期 json 导入 → 运行时形状防线：char-data 产出的库若非数组（或空文件），
@@ -24,6 +27,16 @@ function 随机小数(): number {
   return crypto.getRandomValues(new Uint32Array(1))[0] / 2 ** 32;
 }
 
+/**
+ * 空态文案：抽卡→null 有三成因（空库／排除字滤空／五行硬滤滤空，char-draw.ts），
+ * 按当前筛选如实归因——硬滤不回退语义不动，只是文案不指错方向。
+ */
+function 空态文案(库空: boolean, 五行: 五行筛选): string {
+  if (库空) return '字库暂未就绪，稍后再试。';
+  if (五行 === '随机') return '无字可抽（诸字皆在排除之列）。';
+  return `无字可抽（「${五行}」属之字俱已排除，或字库本无此属）。`;
+}
+
 export interface CharDrawPanelProps {
   /** 空数组=无偏好全库等概率（结果态时传 chart.xiyongshen.喜用神，否则 []）。 */
   喜用神: readonly string[];
@@ -33,14 +46,26 @@ export interface CharDrawPanelProps {
   onPick: (字: string) => void;
 }
 
-/** 抽卡结果展示 + 再抽/用它；null=未抽或空态。 */
+/** 抽卡结果展示 + 五行筛选 + 再抽/用它；null=未抽或空态。 */
 export function CharDrawPanel({ 喜用神, 排除字, onPick }: CharDrawPanelProps) {
   const [展开, set展开] = useState(false);
   const [当前, set当前] = useState<好意向字 | null>(null);
+  const [五行, set五行] = useState<五行筛选>('随机');
 
-  const 抽一次 = useCallback(() => {
-    set当前(抽卡(库, { 喜用神, 排除字, rng: 随机小数 }));
-  }, [喜用神, 排除字]);
+  // 显式传 五行（切换钮时新值即抽，不等 state 落地——闭包读旧值会差一拍）。
+  const 抽给定 = useCallback(
+    (筛选: 五行筛选) => {
+      set当前(抽卡(库, { 五行: 筛选, 喜用神, 排除字, rng: 随机小数 }));
+    },
+    [喜用神, 排除字],
+  );
+
+  const 抽一次 = useCallback(() => 抽给定(五行), [抽给定, 五行]);
+
+  const 换筛选 = (筛选: 五行筛选) => {
+    set五行(筛选);
+    抽给定(筛选); // 契约 C6：切换即自动抽一次
+  };
 
   const 收起 = () => {
     set展开(false);
@@ -71,6 +96,23 @@ export function CharDrawPanel({ 喜用神, 排除字, onPick }: CharDrawPanelPro
       </button>
       {展开 ? (
         <span className="flex w-full flex-wrap items-center gap-x-3 gap-y-2 border border-ink/25 bg-paper/50 px-3 py-2">
+          <span role="group" aria-label="五行筛选" className="flex gap-1">
+            {筛选钮.map((选项) => (
+              <button
+                key={选项}
+                type="button"
+                aria-pressed={五行 === 选项}
+                onClick={() => 换筛选(选项)}
+                className={
+                  五行 === 选项
+                    ? 'border border-cinnabar bg-cinnabar/10 px-1.5 py-0.5 text-xs font-bold text-cinnabar'
+                    : 'border border-ink/30 px-1.5 py-0.5 text-xs text-ink-soft transition-colors hover:border-cinnabar hover:text-cinnabar'
+                }
+              >
+                {选项}
+              </button>
+            ))}
+          </span>
           {当前 !== null ? (
             <>
               <span key={当前.字} className="animate-ink-pulse text-3xl font-bold text-ink">
@@ -87,9 +129,7 @@ export function CharDrawPanel({ 喜用神, 排除字, onPick }: CharDrawPanelPro
               <span className="text-sm text-ink-soft">{当前.寓意}</span>
             </>
           ) : (
-            <span className="text-sm text-ink-soft">
-              {库.length === 0 ? '字库暂未就绪，稍后再试。' : '无字可抽（诸字皆在排除之列）。'}
-            </span>
+            <span className="text-sm text-ink-soft">{空态文案(库.length === 0, 五行)}</span>
           )}
           <span className="ml-auto flex gap-2">
             <button

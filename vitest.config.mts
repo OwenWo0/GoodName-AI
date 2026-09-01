@@ -3,6 +3,9 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 export default defineConfig({
+  // vitest 4 = rolldown-vite：JSX 转译走 oxc，esbuild.jsx 会被静默忽略。
+  // tsconfig jsx=preserve 下，缺此配置则 import-analysis 拒收含 JSX 的 .tsx（组件测试载不入）。
+  oxc: { jsx: 'automatic' },
   test: {
     include: ['tests/**/*.test.ts'],
     environment: 'node',

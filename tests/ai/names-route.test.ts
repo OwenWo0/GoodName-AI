@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 import { POST } from '@/app/api/analyze-names/route';
 
 /** 假流状态：供 mock 闭包共享，逐用例重置。 */
@@ -16,7 +16,7 @@ const originalFetch = globalThis.fetch;
 const sseEncoder = new TextEncoder();
 
 beforeAll(() => {
-  globalThis.fetch = (async (_input: any, _init?: any) => {
+  globalThis.fetch = (async () => {
     if (假流状态.createError) throw 假流状态.createError;
     const stream = new ReadableStream({
       start(controller) {
